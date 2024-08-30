@@ -109,17 +109,12 @@ int main() {
     }
 
     // Mostrar os percursos da árvore
-    printf("Em-Ordem: ");
+    printf("Em-Ordem:");
     EmOrdem(raiz);
-    printf("\n");
-
-    printf("Pre-Ordem: ");
+    printf("\nPre-Ordem: ");
     preOrdem(raiz);
-    printf("\n");
-
-    printf("Pos-Ordem: ");
+    printf("\nPos-Ordem: ");
     posOrdem(raiz);
-    printf("\n");
 
     return 0;
 }
