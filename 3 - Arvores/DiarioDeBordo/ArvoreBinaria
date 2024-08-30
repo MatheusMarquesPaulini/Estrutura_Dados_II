@@ -1,1 +1,125 @@
+#include <stdio.h>
+#include <stdlib.h>
 
+// Definição da estrutura do nó da árvore
+typedef struct No {
+    int data;
+    struct No* esquerda;
+    struct No* direita;
+} No;
+
+// Função para criar um novo nó
+No* novoNo(int data) {
+    No* novoNo = (No*)malloc(sizeof(No));
+    novoNo->data = data;
+    novoNo->esquerda = NULL;
+    novoNo->direita = NULL;
+    return novoNo;
+}
+
+// Função para inserir um novo valor na árvore binária 
+No* insert(No* raiz, int data) {
+   
+    if (raiz == NULL) {
+        return novoNo(data);
+    }
+    if (data < raiz -> data) {
+        raiz -> esquerda = insert(raiz -> esquerda, data);
+    } else {
+        raiz -> direita = insert(raiz -> direita, data);
+    }
+    return raiz;
+}
+
+// Percurso Em-Ordem (Iterativo)
+void EmOrdem(No* raiz) {
+    No* atual = raiz;
+    No* pilha[100];  // Pilha para armazenar os nós
+    int topo = -1;  // Topo da pilha
+
+    while (atual != NULL || topo >= 0) {
+        // Chega até o nó mais à esquerda
+        while (atual != NULL) {
+            pilha[++topo] = atual;
+            atual = atual -> esquerda;
+        }
+        // Processa o nó
+        atual = pilha[topo--];
+        printf("%d ", atual->data);
+        // Move para a sub-árvore direita
+        atual = atual -> direita;
+    }
+}
+
+// Percurso Pré-Ordem (Iterativo)
+void preOrdem(No* raiz) {
+    if (raiz == NULL) return;
+
+    No* pilha[100];
+    int topo = -1;
+    pilha[++topo] = raiz;
+
+    while (topo >= 0) {
+        No* no = pilha[topo--];
+        printf("%d ", no->data);
+        // Empilha a sub-árvore direita antes da esquerda
+        if (no->direita != NULL) pilha[++topo] = no-> direita;
+        if (no->esquerda != NULL) pilha[++topo] = no-> esquerda;
+    }
+}
+
+// Percurso Pós-Ordem Iterativo
+void posOrdem(No* raiz) {
+    if (raiz == NULL) return;
+
+    No* pilha[100];
+    No* ultimo = NULL;
+    int topo = -1;
+    
+    pilha[++topo] = raiz;
+
+    while (topo >= 0) {
+        No* no = pilha[topo];
+        
+        if (no->esquerda == NULL && no->direita == NULL || 
+            ultimo != NULL && (ultimo == no->esquerda || ultimo == no->direita)) {
+            printf("%d ", no->data);
+                ultimo = no;
+            topo--;
+        } else {
+            if (no->direita != NULL) pilha[++topo] = no->direita;
+            if (no->esquerda != NULL) pilha[++topo] = no->esquerda;
+        }
+    }
+}
+
+int main() {
+    No* raiz = NULL;
+    int n, valor;
+
+    // Solicitar o número de elementos para inserir na árvore
+    printf("Quantos números você deseja inserir na árvore? ");
+    scanf("%d", &n);
+
+    // Ler os valores e construir a árvore
+    printf("Digite os %d números:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &valor);
+            raiz = insert(raiz, valor);
+    }
+
+    // Mostrar os percursos da árvore
+    printf("Em-Ordem: ");
+    EmOrdem(raiz);
+    printf("\n");
+
+    printf("Pre-Ordem: ");
+    preOrdem(raiz);
+    printf("\n");
+
+    printf("Pos-Ordem: ");
+    posOrdem(raiz);
+    printf("\n");
+
+    return 0;
+}
