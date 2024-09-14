@@ -1,1 +1,211 @@
+#include <stdio.h>
+#include <stdlib.h>
 
+// Definição da estrutura do nó da árvore AVL
+typedef struct No {
+    int data;
+    struct No* esquerda;
+    struct No* direita;
+    int altura;  // Altura do nó na árvore
+} No;
+
+// Criar um novo nó
+No* novoNo(int data) {
+    No* no = (No*)malloc(sizeof(No));
+    no->data = data;
+    no->esquerda = NULL;
+    no->direita = NULL;
+    no->altura = 1;  // Altura inicial do nó é 1
+    return no;
+}
+
+// Função para obter a altura de um nó
+int altura(No* no) {
+    if (no == NULL) return 0;
+    return no->altura;
+}
+
+// Calcular o fator de balanceamento de um nó
+int fatorDeBalanceamento(No* no) {
+    if (no == NULL) return 0;
+    return altura(no->esquerda) - altura(no->direita);
+}
+
+// Atualizar a altura de um nó
+void atualizarAltura(No* no) {
+    if (no != NULL) {
+        no->altura = 1 + (altura(no->esquerda) > altura(no->direita) ? altura(no->esquerda) : altura(no->direita));
+    }
+}
+
+// Rotação à direita
+No* rotacaoDireita(No* y) {
+    No* x = y->esquerda;
+    No* T2 = x->direita;
+
+    // Realiza a rotação
+    x->direita = y;
+    y->esquerda = T2;
+
+    // Atualiza a altura dos nós afetados
+    atualizarAltura(y);
+    atualizarAltura(x);
+
+    return x;
+}
+
+// Rotação à esquerda
+No* rotacaoEsquerda(No* x) {
+    No* y = x->direita;
+    No* T2 = y->esquerda;
+
+    // Realiza a rotação
+    y->esquerda = x;
+    x->direita = T2;
+
+    // Atualiza a altura dos nós afetados
+    atualizarAltura(x);
+    atualizarAltura(y);
+
+    return y;
+}
+
+// Balancear um nó
+No* balancear(No* no) {
+    int fb = fatorDeBalanceamento(no);  // Fator de balanceamento do nó
+
+    // Rotação simples à direita
+    if (fb > 1 && fatorDeBalanceamento(no->esquerda) >= 0) {
+        return rotacaoDireita(no);
+    }
+
+    // Rotação simples à esquerda
+    if (fb < -1 && fatorDeBalanceamento(no->direita) <= 0) {
+        return rotacaoEsquerda(no);
+    }
+
+    // Rotação dupla à esquerda-direita
+    if (fb > 1 && fatorDeBalanceamento(no->esquerda) < 0) {
+        no->esquerda = rotacaoEsquerda(no->esquerda);
+        return rotacaoDireita(no);
+    }
+
+    // Rotação dupla à direita-esquerda
+    if (fb < -1 && fatorDeBalanceamento(no->direita) > 0) {
+        no->direita = rotacaoDireita(no->direita);
+        return rotacaoEsquerda(no);
+    }
+
+    return no;
+}
+
+// Inserir um novo valor na árvore AVL
+No* inserir(No* raiz, int data) {
+    if (raiz == NULL) {
+        return novoNo(data);
+    }
+
+    // Inserção normal em árvore binária de busca
+    if (data < raiz->data) {
+        raiz->esquerda = inserir(raiz->esquerda, data);
+    } else if (data > raiz->data) {
+        raiz->direita = inserir(raiz->direita, data);
+    } else {
+        // Valores duplicados não são permitidos
+        return raiz;
+    }
+
+    // Atualiza a altura do nó atual
+    atualizarAltura(raiz);
+
+    // Balanceia o nó atual
+    return balancear(raiz);
+}
+
+// Percurso Em-Ordem (Iterativo)
+void EmOrdem(No* raiz) {
+    No* atual = raiz;
+    No* pilha[100];  // Pilha para armazenar os nós
+    int topo = -1;  // Topo da pilha
+
+    while (atual != NULL || topo >= 0) {
+        // Chega até o nó mais à esquerda
+        while (atual != NULL) {
+            pilha[++topo] = atual;
+            atual = atual->esquerda;
+        }
+        // Processa o nó
+        atual = pilha[topo--];
+        printf("%d ", atual->data);
+        // Move para a sub-árvore direita
+        atual = atual->direita;
+    }
+}
+
+// Percurso Pré-Ordem (Iterativo)
+void preOrdem(No* raiz) {
+    if (raiz == NULL) return;
+
+    No* pilha[100];
+    int topo = -1;
+    pilha[++topo] = raiz;
+
+    while (topo >= 0) {
+        No* no = pilha[topo--];
+        printf("%d ", no->data);
+        // Empilha a sub-árvore direita antes da esquerda
+        if (no->direita != NULL) pilha[++topo] = no->direita;
+        if (no->esquerda != NULL) pilha[++topo] = no->esquerda;
+    }
+}
+
+// Percurso Pós-Ordem Iterativo
+void posOrdem(No* raiz) {
+    if (raiz == NULL) return;
+
+    No* pilha[100];
+    No* ultimo = NULL;
+    int topo = -1;
+
+    pilha[++topo] = raiz;
+
+    while (topo >= 0) {
+        No* no = pilha[topo];
+
+        if ((no->esquerda == NULL && no->direita == NULL) || 
+            (ultimo != NULL && (ultimo == no->esquerda || ultimo == no->direita))) {
+            printf("%d ", no->data);
+            ultimo = no;
+            topo--;
+        } else {
+            if (no->direita != NULL) pilha[++topo] = no->direita;
+            if (no->esquerda != NULL) pilha[++topo] = no->esquerda;
+        }
+    }
+}
+
+int main() {
+    No* raiz = NULL;
+    int n, valor;
+
+    // Solicitar o número de elementos para inserir na árvore
+    printf("Quantos números você deseja inserir na árvore? ");
+    scanf("%d", &n);
+
+    // Ler os valores e construir a árvore
+    printf("Digite os %d números:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &valor);
+        raiz = inserir(raiz, valor);
+    }
+
+    // Mostrar os percursos da árvore
+    printf("Em-Ordem:");
+    EmOrdem(raiz);
+    printf("\nPre-Ordem: ");
+    preOrdem(raiz);
+    printf("\nPos-Ordem: ");
+    posOrdem(raiz);
+
+    return 0;
+}
