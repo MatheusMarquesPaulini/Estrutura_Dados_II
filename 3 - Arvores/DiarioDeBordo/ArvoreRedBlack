@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef enum { RED, BLACK } Cor;
+
+typedef struct No {
+    int data;
+    struct No* esquerda;
+    struct No* direita;
+    struct No* pai;
+    Cor cor;  // Cor do nó: RED ou BLACK
+} No;
+
+// Criar um novo nó
+No* novoNo(int data) {
+    No* no = (No*)malloc(sizeof(No));
+    no->data = data;
+    no->esquerda = NULL;
+    no->direita = NULL;
+    no->pai = NULL;
+    no->cor = RED;  // Novo nó é sempre vermelho
+    return no;
+}
+
+// Rotação à esquerda
+No* rotacaoEsquerda(No* raiz, No* x) {
+    No* y = x->direita;
+    x->direita = y->esquerda;
+    if (y->esquerda != NULL) {
+        y->esquerda->pai = x;
+    }
+    y->pai = x->pai;
+    if (x->pai == NULL) {
+        raiz = y;  // y é agora a nova raiz
+    } else if (x == x->pai->esquerda) {
+        x->pai->esquerda = y;
+    } else {
+        x->pai->direita = y;
+    }
+    y->esquerda = x;
+    x->pai = y;
+
+    return raiz;
+}
+
+// Rotação à direita
+No* rotacaoDireita(No* raiz, No* y) {
+    No* x = y->esquerda;
+    y->esquerda = x->direita;
+    if (x->direita != NULL) {
+        x->direita->pai = y;
+    }
+    x->pai = y->pai;
+    if (y->pai == NULL) {
+        raiz = x;  // x é agora a nova raiz
+    } else if (y == y->pai->direita) {
+        y->pai->direita = x;
+    } else {
+        y->pai->esquerda = x;
+    }
+    x->direita = y;
+    y->pai = x;
+
+    return raiz;
+}
+
+// Balancear a árvore após a inserção
+No* balancear(No* raiz, No* novo) {
+    while (novo->pai != NULL && novo->pai->cor == RED) {
+        if (novo->pai == novo->pai->pai->esquerda) {
+            No* tio = novo->pai->pai->direita;
+            if (tio != NULL && tio->cor == RED) {
+                novo->pai->cor = BLACK;
+                tio->cor = BLACK;
+                novo->pai->pai->cor = RED;
+                novo = novo->pai->pai;
+            } else {
+                if (novo == novo->pai->direita) {
+                    novo = novo->pai;
+                    raiz = rotacaoEsquerda(raiz, novo);
+                }
+                novo->pai->cor = BLACK;
+                novo->pai->pai->cor = RED;
+                raiz = rotacaoDireita(raiz, novo->pai->pai);
+            }
+        } else {
+            No* tio = novo->pai->pai->esquerda;
+            if (tio != NULL && tio->cor == RED) {
+                novo->pai->cor = BLACK;
+                tio->cor = BLACK;
+                novo->pai->pai->cor = RED;
+                novo = novo->pai->pai;
+            } else {
+                if (novo == novo->pai->esquerda) {
+                    novo = novo->pai;
+                    raiz = rotacaoDireita(raiz, novo);
+                }
+                novo->pai->cor = BLACK;
+                novo->pai->pai->cor = RED;
+                raiz = rotacaoEsquerda(raiz, novo->pai->pai);
+            }
+        }
+    }
+    raiz->cor = BLACK;  // A raiz sempre é preta
+    return raiz;
+}
+
+// Inserir um novo valor na árvore Red-Black
+No* inserir(No* raiz, int data) {
+    No* novo = novoNo(data);
+    No* y = NULL;
+    No* x = raiz;
+
+    // Inserção normal em árvore binária de busca
+    while (x != NULL) {
+        y = x;
+        if (novo->data < x->data) {
+            x = x->esquerda;
+        } else {
+            x = x->direita;
+        }
+    }
+
+    novo->pai = y;
+    if (y == NULL) {
+        raiz = novo;  // A árvore estava vazia
+    } else if (novo->data < y->data) {
+        y->esquerda = novo;
+    } else {
+        y->direita = novo;
+    }
+
+    // Balancear a árvore
+    return balancear(raiz, novo);
+}
+
+// Função para exibir a árvore
+void mostrarArvore(No* raiz, int nivel) {
+    if (raiz == NULL) return;
+
+    mostrarArvore(raiz->direita, nivel + 1);
+    for (int i = 0; i < nivel; i++) {
+        printf("   ");
+    }
+    printf("%d (%s)\n", raiz->data, raiz->cor == RED ? "R" : "B");
+    mostrarArvore(raiz->esquerda, nivel + 1);
+}
+
+// Função principal
+int main() {
+    No* raiz = NULL;
+    int n, valor;
+
+    // Solicitar o número de elementos para inserir na árvore
+    printf("Quantos números você deseja inserir na árvore? ");
+    scanf("%d", &n);
+
+    // Ler os valores e construir a árvore
+    printf("Digite os %d números:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &valor);
+        raiz = inserir(raiz, valor);
+    }
+
+    // Mostrar a árvore
+    printf("Árvore Red-Black:\n");
+    mostrarArvore(raiz, 0);
+
+    return 0;
+}
