@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+struct NoTreap
+{
+    int dado;
+    int prioridade;
+    struct NoTreap *esquerda;
+    struct NoTreap *direita;
+};
+
+struct NoTreap *criarNo(int dado)
+{
+    struct NoTreap *novoNo = (struct NoTreap *)malloc(sizeof(struct NoTreap));
+    if (novoNo == NULL)
+    {
+        printf("Erro: Falha ao alocar memória para o novo nó.\n");
+        exit(-1);
+    }
+    novoNo->dado = dado;
+    novoNo->prioridade = rand() % 100;
+    novoNo->esquerda = NULL;
+    novoNo->direita = NULL;
+    return novoNo;
+}
+
+struct NoTreap *rotacaoDireita(struct NoTreap *no)
+{
+    struct NoTreap *novaRaiz = no->esquerda;
+    no->esquerda = novaRaiz->direita;
+    novaRaiz->direita = no;
+    return novaRaiz;
+}
+
+struct NoTreap *rotacaoEsquerda(struct NoTreap *no)
+{
+    struct NoTreap *novaRaiz = no->direita;
+    no->direita = novaRaiz->esquerda;
+    novaRaiz->esquerda = no;
+    return novaRaiz;
+}
+
+struct NoTreap *inserir(struct NoTreap *raiz, int dado)
+{
+    if (raiz == NULL)
+        return criarNo(dado);
+
+    if (dado < raiz->dado)
+        raiz->esquerda = inserir(raiz->esquerda, dado);
+    else if (dado > raiz->dado)
+        raiz->direita = inserir(raiz->direita, dado);
+    else
+        return raiz;
+
+    if (raiz->esquerda != NULL && raiz->esquerda->prioridade > raiz->prioridade)
+        return rotacaoDireita(raiz);
+
+    if (raiz->direita != NULL && raiz->direita->prioridade > raiz->prioridade)
+        return rotacaoEsquerda(raiz);
+    return raiz;
+}
+
+struct NoTreap *encontrarMinimo(struct NoTreap *no)
+{
+    while (no && no->esquerda != NULL)
+        no = no->esquerda;
+    return no;
+}
+
+struct NoTreap *excluir(struct NoTreap *raiz, int dado)
+{
+    if (raiz == NULL)
+        return raiz;
+
+    if (dado < raiz->dado)
+        raiz->esquerda = excluir(raiz->esquerda, dado);
+    else if (dado > raiz->dado)
+        raiz->direita = excluir(raiz->direita, dado);
+    else
+    {
+        if (raiz->esquerda == NULL)
+        {
+            struct NoTreap *temp = raiz->direita;
+            free(raiz);
+            return temp;
+        }
+        else if (raiz->direita == NULL)
+        {
+            struct NoTreap *temp = raiz->esquerda;
+            free(raiz);
+            return temp;
+        }
+
+        struct NoTreap *minimo = encontrarMinimo(raiz->direita);
+        raiz->dado = minimo->dado;
+        raiz->direita = excluir(raiz->direita, minimo->dado);
+    }
+
+    return raiz;
+}
+
+void percorrerArvore(struct NoTreap *raiz)
+{
+    if (raiz != NULL)
+    {
+        percorrerArvore(raiz->esquerda);
+        printf("%d (P: %d) ", raiz->dado, raiz->prioridade);
+        percorrerArvore(raiz->direita);
+    }
+}
+
+int main()
+{
+    srand(time(NULL));
+    struct NoTreap *raiz = NULL;
+
+    raiz = inserir(raiz, 30);
+    raiz = inserir(raiz, 24);
+    raiz = inserir(raiz, 20);
+    raiz = inserir(raiz, 35);
+    raiz = inserir(raiz, 27);
+    raiz = inserir(raiz, 33);
+    raiz = inserir(raiz, 38);
+    raiz = inserir(raiz, 25);
+    raiz = inserir(raiz, 22);
+    raiz = inserir(raiz, 34);
+    raiz = inserir(raiz, 40);
+    raiz = inserir(raiz, 29);
+
+    printf("Árvore Treap :\n");
+    percorrerArvore(raiz);
+    printf("\n");
+
+    // Excluindo alguns nós
+    raiz = excluir(raiz, 24);
+    printf("\nApós excluir 24:\n");
+    percorrerArvore(raiz);
+    printf("\n");
+
+    raiz = excluir(raiz, 35);
+    printf("\nApós excluir 35:\n");
+    percorrerArvore(raiz);
+    printf("\n");
+
+    return 0;
+}
